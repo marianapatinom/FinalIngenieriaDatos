@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline de Ventas Big Data: PySpark & Machine Learning</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 25, 40, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            --accent-gradient: linear-gradient(135deg, #f02fc2 0%, #6094ea 100%);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --glow-color: rgba(0, 242, 254, 0.15);
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-pink: #f02fc2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(240, 47, 194, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* Contenedores y Grid */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(11, 15, 25, 0.8);
+        }
+
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            font-size: 1.8rem;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--accent-cyan);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 8rem 0 5rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-badge {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            color: var(--accent-cyan);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px var(--glow-color);
+            animation: pulse 2s infinite alternate;
+        }
+
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to right, #ffffff 30%, #a5f3fc 60%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin: 0 auto 3rem auto;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.9rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #05050a;
+            box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 242, 254, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+
+        /* Glassmorphism Cards & Sections */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(to right, #fff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 4rem auto;
+            font-weight: 300;
+        }
+
+        section {
+            padding: 6rem 0;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 242, 254, 0.25);
+            box-shadow: 0 12px 40px 0 rgba(0, 242, 254, 0.08);
+        }
+
+        /* Grid de Características */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(0, 242, 254, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+        }
+
+        .feature-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 300;
+        }
+
+        /* Diagrama de Arquitectura */
+        .architecture-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            margin: 3rem 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            background: rgba(17, 25, 40, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.25rem 2rem;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            border-color: rgba(79, 172, 254, 0.3);
+            background: rgba(17, 25, 40, 0.6);
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .step-details h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            margin-bottom: 0.25rem;
+            color: #fff;
+        }
+
+        .step-details p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .flow-arrow {
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+            animation: bounce 1.5s infinite;
+        }
+
+        /* Pestañas de Código */
+        .code-tabs {
+            margin-top: 3rem;
+        }
+
+        .tab-headers {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        pre {
+            background: #060913;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            max-height: 500px;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: #a5f3fc;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0;
+            border-top: 1px solid var(--card-border);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        footer strong {
+            color: var(--text-primary);
+        }
+
+        /* Animaciones */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
+            }
+            100% {
+                box-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(6px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 1s ease forwards;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            .hero p {
+                font-size: 1.1rem;
+            }
+            .nav-wrapper {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Nav -->
+    <header>
+        <div class="container nav-wrapper">
+            <div class="logo">
+                <span>⚡</span> SparkSales ML
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#pipeline">Pipeline ETL</a></li>
+                    <li><a href="#machine-learning">Modelo IA</a></li>
+                    <li><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#codigo">Ver Código</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero container">
+        <div class="hero-badge">Pipeline Big Data & IA</div>
+        <h1 class="animate-fade-in">ETL Inteligente en PySpark <br>& Visualización Interactiva</h1>
+        <p class="animate-fade-in">Un ecosistema robusto e integrado que realiza la ingesta y agregación de ventas masivas con PySpark, modela la demanda mediante Inteligencia Artificial y despliega un panel de control interactivo de alta fidelidad en Streamlit.</p>
+        <div class="cta-buttons animate-fade-in">
+            <a href="#pipeline" class="btn btn-primary">Explorar Arquitectura</a>
+            <a href="#codigo" class="btn btn-secondary">Explorar Código</a>
+        </div>
+    </section>
+
+    <!-- Pipeline Architecture -->
+    <section id="pipeline" class="container">
+        <h2 class="section-title">El Pipeline de Datos</h2>
+        <p class="section-subtitle">Arquitectura secuencial para el procesamiento paralelo de alto rendimiento y el análisis predictivo.</p>
+        
+        <div class="glass-card">
+            <div class="architecture-flow">
+                
+                <div class="flow-step">
+                    <div class="step-num">1</div>
+                    <div class="step-details">
+                        <h4>Ingesta de Ventas Diarias (CSV)</h4>
+                        <p>Recibe archivos CSV planos estructurados con identificador de venta, producto, cantidad transaccionada y precio unitario.</p>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-step">
+                    <div class="step-num">2</div>
+                    <div class="step-details">
+                        <h4>Procesamiento ETL en Paralelo (PySpark)</h4>
+                        <p>Una sesión de Spark infiere el esquema, ejecuta transformaciones distribuidas calculando el <code>total_venta</code> y realiza la limpieza.</p>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-step">
+                    <div class="step-num">3</div>
+                    <div class="step-details">
+                        <h4>Almacenamiento Optimizado (Parquet)</h4>
+                        <p>Guarda los datos procesados en formato Parquet columnar, reduciendo drásticamente el espacio y agilizando las consultas analíticas subsiguientes.</p>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-step">
+                    <div class="step-num">4</div>
+                    <div class="step-details">
+                        <h4>Análisis Exploratorio & Entrenamiento (Jupyter Notebook)</h4>
+                        <p>Explora el dataset en Parquet, genera correlaciones e instala un regresor RandomForest para predecir la cantidad demandada según el precio y artículo.</p>
+                    </div>
+                </div>
+                
+                <div class="flow-arrow">↓</div>
+                
+                <div class="flow-step">
+                    <div class="step-num">5</div>
+                    <div class="step-details">
+                        <h4>Aplicación de Control & Simulación (Streamlit App)</h4>
+                        <p>Proporciona un dashboard de negocio interactivo con KPIs de ingresos, gráficos interactivos en Plotly e inferencia instantánea del modelo de ML.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="machine-learning" class="container">
+        <h2 class="section-title">Características del Ecosistema</h2>
+        <p class="section-subtitle">Diseñado con tecnologías líderes de la industria de datos para ofrecer velocidad, escalabilidad e interactividad.</p>
+        
+        <div class="features-grid">
+            <div class="glass-card feature-card">
+                <div class="feature-icon">📁</div>
+                <h3>Motor Columnar Parquet</h3>
+                <p>Almacenamiento altamente eficiente optimizado para motores de Big Data que permite realizar proyecciones y pushdown de predicados a alta velocidad.</p>
+            </div>
+            
+            <div class="glass-card feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Inferencia Predictiva</h3>
+                <p>Modelo de Random Forest entrenado para capturar la elasticidad del precio y estimar el volumen exacto de demanda para cualquier producto.</p>
+            </div>
+            
+            <div class="glass-card feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3>Estética Premium</h3>
+                <p>Visualización refinada con diseño adaptativo, degradados inmersivos y una experiencia fluida e intuitiva tanto para analistas de negocio como para tomadores de decisiones.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Walkthrough -->
+    <section id="codigo" class="container">
+        <h2 class="section-title">Bloques de Código Core</h2>
+        <p class="section-subtitle">Examine el código fuente de los principales componentes desarrollados para el pipeline.</p>
+        
+        <div class="code-tabs">
+            <div class="tab-headers">
+                <button class="tab-btn active" onclick="openTab(event, 'pyspark-code')">1. PySpark ETL</button>
+                <button class="tab-btn" onclick="openTab(event, 'ml-code')">2. Machine Learning</button>
+                <button class="tab-btn" onclick="openTab(event, 'streamlit-code')">3. Streamlit App</button>
+            </div>
+            
+            <div id="pyspark-code" class="tab-content active">
+                <div class="glass-card">
+                    <h3 style="margin-bottom:1rem;">process_sales.py</h3>
+                    <pre><code>from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+
+# Inicialización del motor Spark en memoria distribuida
+spark = SparkSession.builder \
+    .appName("SalesETL") \
+    .getOrCreate()
+
+# Cargar el archivo CSV con esquema inferido
+df_ventas = spark.read.option("header", "true").option("inferSchema", "true").csv("data/ventas.csv")
+
+# Cálculo distribuido de total_venta (cantidad * precio)
+df_procesado = df_ventas.withColumn("total_venta", col("cantidad") * col("precio"))
+
+# Impresión del Dataframe procesado en consola
+df_procesado.show(n=10)
+
+# Escritura de alto rendimiento de los datos procesados en formato Parquet
+df_procesado.write.mode("overwrite").parquet("data/ventas_procesadas")
+
+# Liberación de recursos
+spark.stop()</code></pre>
+                </div>
+            </div>
+            
+            <div id="ml-code" class="tab-content">
+                <div class="glass-card">
+                    <h3 style="margin-bottom:1rem;">notebook.ipynb (Modelo ML)</h3>
+                    <pre><code>import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import LabelEncoder
+import pickle
+
+# Carga de datos de ventas desde Parquet
+df = pd.read_parquet("data/ventas_procesadas")
+
+# Transformación de datos y Label Encoding del Producto
+le = LabelEncoder()
+df['producto_encoded'] = le.fit_transform(df['producto'])
+
+# Atributos de Entrada y Objetivo
+X = df[['producto_encoded', 'precio']]
+y = df['cantidad']
+
+# Partición del Dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Instanciar y ajustar el modelo
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Serializar el modelo y el encoder para despliegue en Streamlit
+with open("models/sales_model.pkl", "wb") as f:
+    pickle.dump({'model': model, 'label_encoder': le, 'products_info': df.groupby('producto')['precio'].mean().to_dict()}, f)</code></pre>
+                </div>
+            </div>
+            
+            <div id="streamlit-code" class="tab-content">
+                <div class="glass-card">
+                    <h3 style="margin-bottom:1rem;">app.py (Visualización & Predictor)</h3>
+                    <pre><code>import streamlit as st
+import pandas as pd
+import plotly.express as px
+import pickle
+import numpy as np
+
+# Carga e Inferencia de Datos procesados en Parquet
+df = pd.read_parquet("data/ventas_procesadas")
+
+# Visualización de métricas
+st.title("📊 Dashboard de Ventas & Machine Learning")
+total_revenue = df['total_venta'].sum()
+st.metric("Ingresos Totales", f"${total_revenue:,.2f}")
+
+# Carga del modelo inteligente
+with open("models/sales_model.pkl", "rb") as f:
+    model_data = pickle.load(f)
+
+# Control de entrada de usuario
+input_prod = st.selectbox("Producto", df['producto'].unique())
+input_price = st.slider("Establecer Precio Unitario", 10.0, 3000.0, 100.0)
+
+# Predicción por el modelo de Random Forest
+encoded_prod = model_data['label_encoder'].transform([input_prod])[0]
+predicted_qty = model_data['model'].predict([[encoded_prod, input_price]])[0]
+
+st.write(f"Demanda Estimada: **{predicted_qty:.2f} unidades**")</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Diseñado para el <strong>Parcial de Ingeniería de Software II</strong> - Ejercicio de Big Data & Inteligencia Artificial.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7;">© 2026. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts de interactividad -->
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            // Ocultar todos los contenidos de pestaña
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            // Quitar la clase active de todos los botones
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            // Mostrar la pestaña actual y añadir clase active al botón correspondiente
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html>
